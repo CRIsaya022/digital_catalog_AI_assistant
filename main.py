@@ -28,8 +28,6 @@ def root():
 
 @app.get("/{query_text}")
 def answer_question(query_text: str):
-    # if query_text == "":
-    #     raise HTTPException(status_code=400, detail="Query can't be an empty string")
 
     # Prepare the DB.
     embedding_function = OpenAIEmbeddings()
@@ -49,8 +47,6 @@ def answer_question(query_text: str):
     model = ChatOpenAI()
     response_text = model.predict(prompt)
 
-    # sources = [doc.metadata.get("source", None) for doc, _score in results]
-    # response_with_sources = f"Response: {response_text}\nSources: {sources}"
     return {"data": {
         "content" : response_text
         }}
