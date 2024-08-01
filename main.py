@@ -4,21 +4,16 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from pydantic import BaseModel
+from typing import Optional
+
+from prompts import query_prompt, sys_prompt, alt_prompt
 
 CHROMA_PATH = "chroma"
 
-PROMPT_TEMPLATE = """
-Answer the question as Biashara Plus AI assistant chatbot.(Do not state the
-fact that you are Bishara Plus AI assistant everytime you answer the question).
-If you provide a link do not put a full stop at the end since it will ruin the link and
-lead to a 404 error. Check this always.
-
-{context}
-
----
-
-Answer the question based on the above context: {question}
-"""
+class Chat(BaseModel):
+    user_message: str
+    chat_history: list[tuple[str, str]]
 
 app = FastAPI()
 
@@ -26,8 +21,16 @@ app = FastAPI()
 def root():
     return {"Biashara Plus": "AI assistant"}
 
-@app.get("/{query_text}")
-def answer_question(query_text: str):
+@app.post("/messages")
+def answer_question(chat: Chat):
+
+    #creating the query
+    prompt_template = ChatPromptTemplate.from_template(query_prompt)
+    prompt = prompt_template.format(query=chat.user_message, chat_history=chat.chat_history)
+    model = ChatOpenAI()
+    query_text = model.predict(prompt)
+
+    chat_history = chat.chat_history
 
     # Prepare the DB.
     embedding_function = OpenAIEmbeddings()
@@ -35,14 +38,22 @@ def answer_question(query_text: str):
 
     # Search the DB.
     results = db.similarity_search_with_relevance_scores(query_text, k=3)
+
+    #nonsesical information
     if len(results) == 0 or results[0][1] < 0.7:
+        prompt_template = ChatPromptTemplate.from_template(alt_prompt)
+        prompt = prompt_template.format(question=query_text, chat_history=chat_history)
+
+        model = ChatOpenAI()
+        response_text = model.predict(prompt)
         return {"data": {
-            "content" : "Thank you for reaching out! I'm sorry, but I don't have the information you need right now. You might want to contact this number [+255 679 516 178] for further assistance."
+            "content" : response_text
             }}
 
+    #preparing the answer
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
-    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    prompt = prompt_template.format(context=context_text, question=query_text)
+    prompt_template = ChatPromptTemplate.from_template(sys_prompt)
+    prompt = prompt_template.format(context=context_text, question=query_text, chat_history=chat_history)
 
     model = ChatOpenAI()
     response_text = model.predict(prompt)
