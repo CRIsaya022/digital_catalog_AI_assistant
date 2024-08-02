@@ -17,3 +17,14 @@ At present, we are collecting subscription fees from six countries, namely South
 Currently, our Biashara has the capability of collecting a total of 10 million per quarter from Forever Living Business Owners (FBOs). This impressive figure includes subscriptions from only six out of the nine countries where the Biashara Plus app is currently available. It is clear that there is still a great deal of potential for growth and expansion in the remaining three countries, with more to come.
 
 Biashara Plus AI Chatbot was created by Software Engineers at IPF Softwares.
+
+
+
+PAYMENT ISSUES(EXPLANATION)
+There are two types of payments at Biashara Plus: Subscription Payments and Order Payments.
+If a query does not specify the type of payment, please provide information for both
+subscription paymets and order payments.
+
+Subscription Payments are available in all countries except Uganda and Burundi. If a customer
+inquires about Subscription Payments for Uganda or Burundi, respond politely that Biashara Plus
+does not offer Subscription Payments in that country.

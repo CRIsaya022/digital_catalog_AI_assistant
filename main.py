@@ -24,7 +24,7 @@ def root():
 @app.post("/messages")
 def answer_question(chat: Chat):
 
-    #creating the query
+    #creating the query based on the chat history
     prompt_template = ChatPromptTemplate.from_template(query_prompt)
     prompt = prompt_template.format(query=chat.user_message, chat_history=chat.chat_history)
     model = ChatOpenAI()
@@ -39,7 +39,7 @@ def answer_question(chat: Chat):
     # Search the DB.
     results = db.similarity_search_with_relevance_scores(query_text, k=3)
 
-    #nonsesical information
+    #filter unrelated and sometimes nonsensical information
     if len(results) == 0 or results[0][1] < 0.7:
         prompt_template = ChatPromptTemplate.from_template(alt_prompt)
         prompt = prompt_template.format(question=query_text, chat_history=chat_history)
@@ -50,7 +50,7 @@ def answer_question(chat: Chat):
             "content" : response_text
             }}
 
-    #preparing the answer
+    #Preparing and giving the response
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(sys_prompt)
     prompt = prompt_template.format(context=context_text, question=query_text, chat_history=chat_history)
