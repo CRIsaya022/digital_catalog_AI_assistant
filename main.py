@@ -52,22 +52,21 @@ def answer_question(chat: Chat):
 
     # Create the query based on the chat history
     prompt_template = ChatPromptTemplate.from_template(query_prompt)
-    prompt = prompt_template.format(query=chat.user_message, chat_history=chat_history)
+    prompt = prompt_template.format(query=chat.user_message, chat_history=chat_history[-9:])
     model = ChatOpenAI()
     query_text = model.predict(prompt)
 
     # Prepare the DB for similarity search
     embedding_function = OpenAIEmbeddings()
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+    data_base = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Search the DB
-    results = db.similarity_search_with_relevance_scores(query_text, k=3)
+    results = data_base.similarity_search_with_relevance_scores(query_text, k=3)
 
     if len(results) == 0 or results[0][1] < 0.7:
         prompt_template = ChatPromptTemplate.from_template(alt_prompt)
-        prompt = prompt_template.format(question=query_text, chat_history=chat_history)
+        prompt = prompt_template.format(question=query_text, chat_history=chat_history[-9:])
 
-        model = ChatOpenAI()
         response_text = model.predict(prompt)
 
         #update the chat history with the response
@@ -81,9 +80,8 @@ def answer_question(chat: Chat):
     # Prepare and give the response
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(sys_prompt)
-    prompt = prompt_template.format(context=context_text, question=query_text, chat_history=chat_history)
+    prompt = prompt_template.format(context=context_text, question=query_text, chat_history=chat_history[-9:])
 
-    model = ChatOpenAI()
     response_text = model.predict(prompt)
 
     # Update the chat history with the bot's response
