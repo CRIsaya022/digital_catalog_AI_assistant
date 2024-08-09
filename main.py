@@ -31,7 +31,7 @@ app = FastAPI()
 def root():
     return {"Biashara Plus": "AI assistant"}
 
-@app.post("/messages")
+@app.post("/answer_queries")
 def answer_question(chat: Chat):
     # Fetch or create chat history for the user
     user_data = user_messages_collection.find_one({"user_id": chat.user_id})
@@ -92,3 +92,13 @@ def answer_question(chat: Chat):
     )
 
     return {"data": {"content": response_text}}
+
+@app.post("/messages")
+def get_messages(user_id: str):
+    # Fetch chat history for the user
+    user_data = user_messages_collection.find_one({"user_id": user_id})
+    if not user_data:
+        return {"data": {"content": ""}}
+
+    chat_history = user_data["messages"]
+    return {"data": {"content": chat_history}}
