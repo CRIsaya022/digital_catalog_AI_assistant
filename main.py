@@ -56,20 +56,20 @@ def answer_question(chat: Chat):
     model = ChatOpenAI()
     query_text = model.predict(prompt)
 
-    # Prepare the DB for similarity search
+    # Prepare the db for similarity search
     embedding_function = OpenAIEmbeddings()
     data_base = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    # Search the DB
+    # Search the db
     results = data_base.similarity_search_with_relevance_scores(query_text, k=3)
 
+    # edge case for nonsesical or irrelevant information
     if len(results) == 0 or results[0][1] < 0.7:
         prompt_template = ChatPromptTemplate.from_template(alt_prompt)
         prompt = prompt_template.format(question=query_text, chat_history=chat_history[-9:])
 
         response_text = model.predict(prompt)
 
-        #update the chat history with the response
         chat_history.append(("bot", response_text))
         user_messages_collection.update_one(
         {"user_id": chat.user_id},
