@@ -24,6 +24,8 @@ CHROMA_PATH = "chroma"
 class Chat(BaseModel):
     user_message: str
     user_id: str
+class User(BaseModel):
+    user_id: str
 
 app = FastAPI()
 
@@ -94,11 +96,12 @@ def answer_question(chat: Chat):
     return {"data": {"content": response_text}}
 
 @app.post("/load_conversation")
-def get_messages(user_id: str):
+def get_messages(customer: User):
+    user_id = customer.user_id
     # Fetch or create chat history for the user
     user_data = user_messages_collection.find_one({"user_id": user_id})
     if not user_data:
-        user_data = {"user_id": user_id, "messages": [("bot", "add a welcome message")]}
+        user_data = {"user_id": user_id, "messages": [("bot", "Hello! I am Beatha, your AI customer assistant for Biashara Plus. How can I help you today?")]}
         user_messages_collection.insert_one(user_data)
 
     chat_history = user_data["messages"]
